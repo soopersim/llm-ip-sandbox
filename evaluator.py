@@ -48,19 +48,28 @@ Abstract:
         input=prompt,
     )
 
-    # Get the raw text from the model
     raw = response.output[0].content[0].text.strip()
 
-    # Try to parse it as JSON
+    # Strip Markdown code fences if present, e.g. ```json ... ```
+    if raw.startswith("```"):
+        lines = raw.splitlines()
+        # remove first line if it's ``` or ```json
+        if lines and lines[0].strip().startswith("```"):
+            lines = lines[1:]
+        # remove last line if it's ```
+        if lines and lines[-1].strip().startswith("```"):
+            lines = lines[:-1]
+        raw = "\n".join(lines).strip()
+
     try:
         scores = json.loads(raw)
     except json.JSONDecodeError:
         print("Failed to parse JSON, got:")
         print(raw)
-        # Fallback: return empty dict or something safe
         scores = {}
 
     return scores
+
 
 if __name__ == "__main__":
     raw = """
